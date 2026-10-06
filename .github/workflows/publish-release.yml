@@ -21,6 +21,15 @@ jobs:
           git remote add origin "https://github.com/$REPOSITORY.git"
           git fetch --depth=1 origin "$COMMIT"
           git checkout --detach FETCH_HEAD
+      - name: Keep only setup downloads on existing releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh api --paginate "repos/$GH_REPO/releases" --jq '.[] | .assets[] | select(.name == "ValorantShopChecker.exe" or .name == "release.json") | .id' |
+          while IFS= read -r ASSET_ID; do
+            gh api --method DELETE "repos/$GH_REPO/releases/assets/$ASSET_ID"
+          done
       - name: Validate installer and publish release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -41,8 +50,8 @@ jobs:
           PY
           RELEASE_TAG="$(cat release-tag.txt)"
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
-            echo "This version already exists. Increase version.json and rebuild."
-            exit 1
+            echo "This version is already published; setup downloads have been cleaned up."
+            exit 0
           fi
-          gh release create "$RELEASE_TAG" ValorantShopCheckerSetup.exe ValorantShopChecker.exe release.json --target "$GITHUB_SHA" --title "Valorant Shop Checker $RELEASE_TAG" --notes-file RELEASE_NOTES.md --draft
+          gh release create "$RELEASE_TAG" ValorantShopCheckerSetup.exe --target "$GITHUB_SHA" --title "Valorant Shop Checker $RELEASE_TAG" --notes-file RELEASE_NOTES.md --draft
           gh release edit "$RELEASE_TAG" --draft=false --latest
