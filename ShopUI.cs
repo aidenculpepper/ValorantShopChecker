@@ -36,10 +36,11 @@ namespace PersonalShop {
         Preferences preferences=Preferences.Load(); ReleaseInfo available; bool updateBusy, settingsOpen, autoPending; string updateStatus="Not checked yet";
         readonly System.Windows.Forms.Timer updateTimer=new System.Windows.Forms.Timer();
         PaintedPanel content; Label status; string selectedRegion="auto", stamp="PERSONAL STOREFRONT", mode="OFFLINE", clock="-- : -- : --";
-        ShopData data; bool busy, closing, preview; int selectedTab; DateTime lastRequest=DateTime.MinValue; CancellationTokenSource activeRefresh;
+        Image featuredFallback; ShopData data; bool busy, closing, preview; int selectedTab; DateTime lastRequest=DateTime.MinValue; CancellationTokenSource activeRefresh;
         readonly System.Windows.Forms.Timer tick=new System.Windows.Forms.Timer();
         int pulse; readonly ToolTip tips=new ToolTip();
         public ShopWindow(bool capture) {
+            using(var asset=System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream("FeaturedGun.png")) if(asset!=null) using(var image=Image.FromStream(asset)) featuredFallback=new Bitmap(image);
             preview=capture; Text="Nightshift · Valorant Shop Checker "+Updates.VersionText; Font=new Font("Segoe UI",10); ForeColor=Style.Text; BackColor=Style.Bg; FormBorderStyle=FormBorderStyle.None;
             using(var icon=System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream("Nightshift.ico")) if(icon!=null) Icon=new Icon(icon);
             ClientSize=new Size(1240,850); MinimumSize=new Size(1050,760); StartPosition=FormStartPosition.CenterScreen; AutoScaleMode=AutoScaleMode.Dpi; DoubleBuffered=true;
@@ -65,7 +66,7 @@ namespace PersonalShop {
             tick.Interval=50; tick.Tick+=async delegate { pulse=(pulse+1)%120; if(busy) Invalidate(new Rectangle(84,45,Width-84,270)); if(pulse%20==0) { UpdateClock(); RefreshSettingsState(); if(autoPending && !preview && !busy && !updateBusy && !settingsOpen && !closing) { autoPending=false; if(preferences.AutomaticUpdates && preferences.AutomaticInstall) await InstallUpdate(true); } } }; tick.Start();
             FormClosing+=delegate(object sender,FormClosingEventArgs e) { if(busy) { e.Cancel=true; closing=true; activeRefresh.Cancel(); status.Text="Finishing cleanup before closing..."; } };
             updateTimer.Interval=21600000; updateTimer.Tick+=async delegate { if(preferences.AutomaticUpdates) await CheckUpdate(); }; if(!capture) updateTimer.Start();
-            FormClosed+=delegate { tick.Dispose(); updateTimer.Dispose(); tips.Dispose(); menu.Dispose(); DisposeData(data); };
+            FormClosed+=delegate { tick.Dispose(); updateTimer.Dispose(); tips.Dispose(); menu.Dispose(); DisposeData(data); if(featuredFallback!=null) featuredFallback.Dispose(); };
             Shown+=async delegate { if(preview) ShowDemo(); else { if(preferences.RefreshOnLaunch) await RefreshShop(); if(preferences.AutomaticUpdates) await CheckUpdate(); } };
             Arrange();
         }
@@ -100,31 +101,26 @@ namespace PersonalShop {
             Style.Box(g,new RectangleF(19,17,46,43),Style.Mint,Color.Transparent,12);
             using(var b=new SolidBrush(Style.Bg)) g.FillPolygon(b,new Point[]{new Point(28,29),new Point(35,29),new Point(43,43),new Point(51,29),new Point(57,29),new Point(45,50),new Point(40,50)});
             Style.TextAt(g,"NIGHTSHIFT",11,Style.Text,new Rectangle(116,14,180,27),true);
-            Style.TextAt(g,"VALORANT SHOP  /  v"+Updates.VersionText,8,Style.Muted,new Rectangle(288,16,240,23));
             Style.Box(g,new RectangleF(20,104,44,46),Color.FromArgb(32,43,30),Color.FromArgb(61,81,46),10);
             using(var pen=new Pen(Style.Mint,2)) { g.DrawRectangle(pen,31,116,22,20); g.DrawLine(pen,31,122,53,122); g.DrawLine(pen,38,116,38,136); }
             Style.TextAt(g,"SHOP",7,settingsOpen?Style.Muted:Style.Mint,new Rectangle(16,158,52,20),true,TextFormatFlags.HorizontalCenter|TextFormatFlags.VerticalCenter);
-            Style.TextAt(g,"V",20,Color.FromArgb(64,74,78),new Rectangle(24,Height-78,35,30),true,TextFormatFlags.HorizontalCenter|TextFormatFlags.VerticalCenter);
-            Style.TextAt(g,"SETTINGS",6,settingsOpen?Style.Mint:Style.Muted,new Rectangle(9,Height-98,66,20),true,TextFormatFlags.HorizontalCenter|TextFormatFlags.VerticalCenter);
             if(settingsOpen) return;
             int hx=116,hy=79,hw=Width-148,hh=231;
             using(var p=Style.Round(new RectangleF(hx,hy,hw,hh),16)) using(var b=new LinearGradientBrush(new Rectangle(hx,hy,hw,hh),Color.FromArgb(31,43,34),Color.FromArgb(23,28,30),15f)) g.FillPath(b,p);
             var saved=g.Save(); using(var clip=Style.Round(new RectangleF(hx,hy,hw,hh),16)) g.SetClip(clip);
-            int cx=Width-360,cy=hy+115;
+            int cx=hx+(int)(hw*0.40),cy=hy+115;
             using(var pen=new Pen(Color.FromArgb(25,Style.Mint))) {
                 for(int r=70;r<240;r+=40) g.DrawEllipse(pen,cx-r,cy-r,r*2,r*2);
                 for(int x=hx+hw/2;x<hx+hw;x+=36) g.DrawLine(pen,x,hy,x,hy+hh);
             }
             using(var b=new SolidBrush(Color.FromArgb(12,Style.Mint))) g.FillPolygon(b,new Point[]{new Point(Width-660,hy+hh),new Point(Width-440,hy),new Point(Width-260,hy),new Point(Width-480,hy+hh)});
-            if(data!=null && data.Daily.Count>0 && data.Daily[0].Art!=null) {
-                var art=data.Daily[0].Art; float scale=Math.Min((Width<1150?230f:330f)/art.Width,128f/art.Height); int w=(int)(art.Width*scale),h=(int)(art.Height*scale); g.DrawImage(art,cx-w/2,cy-h/2+18,w,h);
+            var featured=data!=null && data.Daily.Count>0 && data.Daily[0].Art!=null?data.Daily[0].Art:featuredFallback;
+            if(featured!=null) {
+                var art=featured; float scale=Math.Min((Width<1150?450f:580f)/art.Width,170f/art.Height); int w=(int)(art.Width*scale),h=(int)(art.Height*scale); g.DrawImage(art,cx-w/2,cy-h/2+18,w,h);
             } else {
                 using(var pen=new Pen(Color.FromArgb(92,Style.Mint),2)) { g.DrawEllipse(pen,cx-37,cy-37,74,74); g.DrawLine(pen,cx-52,cy,cx+52,cy); g.DrawLine(pen,cx,cy-52,cx,cy+52); }
             }
             g.Restore(saved);
-            Style.TextAt(g,stamp,8,Style.Mint,new Rectangle(hx+25,hy+17,540,22),true);
-            Style.TextAt(g,"GOOD TASTE.\nGREAT TIMING.",31,Style.Text,new Rectangle(hx+23,hy+46,470,107),true,TextFormatFlags.Left|TextFormatFlags.WordBreak);
-            Style.TextAt(g,"Four chances to upgrade your next round.",10,Style.Muted,new Rectangle(hx+26,hy+171,480,26));
             int bx=Width-250;
             Style.Box(g,new RectangleF(bx,hy+21,191,77),Color.FromArgb(17,23,22),Color.FromArgb(51,68,48),10);
             Style.TextAt(g,"NEXT ROTATION",7,Style.Muted,new Rectangle(bx+15,hy+31,160,20),true);
@@ -134,10 +130,10 @@ namespace PersonalShop {
             Style.TextAt(g,busy?"SYNCING YOUR SHOP":mode=="LIVE"?"LIVE SHOP  /  "+data.Shard.ToUpperInvariant():mode=="PREVIEW"?"PREVIEW  /  SAMPLE DATA":"READY TO CONNECT",7,Style.Text,new Rectangle(bx+27,hy+178,158,23),true);
             if(busy) { int barW=(hw-30)/4,travel=(hw-barW-30)*pulse/119; using(var b=new SolidBrush(Style.Mint)) g.FillRectangle(b,hx+15+travel,hy+hh-3,barW,2); }
             Style.TextAt(g,selectedTab==0?"TODAY'S SELECTION":"AFTER HOURS",16,Style.Text,new Rectangle(116,390,380,25),true);
-            string count=data==null?"CONNECT TO REVEAL YOUR OFFERS":selectedTab==0?data.Daily.Count+" PERSONAL OFFERS":data.Night.Count+" DISCOUNTED OFFERS";
+            string count=data==null?"":selectedTab==0?data.Daily.Count+" PERSONAL OFFERS":data.Night.Count+" DISCOUNTED OFFERS";
             Style.TextAt(g,count,8,Style.Muted,new Rectangle(Width-395,394,360,23),false,TextFormatFlags.Right|TextFormatFlags.VerticalCenter);
             using(var b=new SolidBrush(busy?Style.Orange:(mode=="LIVE"?Style.Mint:Style.Muted))) g.FillEllipse(b,117,Height-33,6,6);
-            Style.TextAt(g,"UNOFFICIAL  ·  PERSONAL USE",7,Style.Muted,new Rectangle(Width-272,Height-39,236,20),false,TextFormatFlags.Right|TextFormatFlags.VerticalCenter);
+            Style.TextAt(g,"Made by AC",7,Style.Muted,new Rectangle(Width-272,Height-39,236,20),false,TextFormatFlags.Right|TextFormatFlags.VerticalCenter);
         }
         public void SwitchTab(int tab) { selectedTab=tab; dailyTab.Selected=tab==0; nightTab.Selected=tab==1; dailyTab.Invalidate(); nightTab.Invalidate(); content.AutoScrollPosition=Point.Empty; LayoutCards(); Invalidate(); }
         static void DisposeData(ShopData d) { if(d==null) return; foreach(var o in d.Daily) if(o.Art!=null) o.Art.Dispose(); foreach(var o in d.Night) if(o.Art!=null) o.Art.Dispose(); }

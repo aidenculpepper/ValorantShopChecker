@@ -53,7 +53,7 @@ namespace PersonalShop {
         class SettingsPage : PaintedPanel {
             readonly ShopWindow owner; readonly Switch refreshSwitch,checkSwitch,installSwitch;
             readonly VaultButton check,install,uninstall; readonly Label message;
-            Rectangle routine,updates,client,about;
+            Rectangle routine,updates;
             public SettingsPage(ShopWindow window) {
                 owner=window;
                 refreshSwitch=Toggle("Refresh shop on launch",owner.preferences.RefreshOnLaunch,value=>owner.preferences.RefreshOnLaunch=value);
@@ -74,13 +74,12 @@ namespace PersonalShop {
             }
             void LayoutPage() {
                 int usable=Width-40,gap=20,left=(usable-gap)*57/100,right=usable-gap-left;
-                routine=new Rectangle(20,132,left,314); updates=new Rectangle(20+left+gap,132,right,314);
-                client=new Rectangle(20,466,left,118); about=new Rectangle(20+left+gap,466,right,118);
-                refreshSwitch.Bounds=new Rectangle(routine.Right-84,198,58,30); checkSwitch.Bounds=new Rectangle(routine.Right-84,280,58,30); installSwitch.Bounds=new Rectangle(routine.Right-84,362,58,30);
-                message.Bounds=new Rectangle(updates.X+24,266,updates.Width-48,54);
-                check.Bounds=new Rectangle(updates.X+24,336,updates.Width-48,40);
-                install.Bounds=new Rectangle(updates.X+24,386,updates.Width-48,40);
-                uninstall.Bounds=new Rectangle(about.Right-154,about.Y+65,130,32); Invalidate();
+                routine=new Rectangle(20,90,left,410); updates=new Rectangle(20+left+gap,90,right,410);
+                refreshSwitch.Bounds=new Rectangle(routine.Right-84,156,58,30); checkSwitch.Bounds=new Rectangle(routine.Right-84,238,58,30); installSwitch.Bounds=new Rectangle(routine.Right-84,320,58,30);
+                message.Bounds=new Rectangle(updates.X+24,224,updates.Width-48,54);
+                check.Bounds=new Rectangle(updates.X+24,updates.Bottom-64,updates.Width-48,40);
+                install.Bounds=new Rectangle(updates.X+24,updates.Bottom-114,updates.Width-48,40);
+                uninstall.Bounds=new Rectangle(updates.X+24,updates.Y+214,130,32); Invalidate();
             }
             public void RefreshState() {
                 message.Text=owner.updateStatus; message.ForeColor=owner.available!=null?Style.Orange:owner.updateStatus=="You're up to date"?Style.Mint:Style.Muted;
@@ -97,25 +96,19 @@ namespace PersonalShop {
             }
             protected override void OnPaint(PaintEventArgs e) {
                 base.OnPaint(e); var g=e.Graphics; g.SmoothingMode=SmoothingMode.AntiAlias;
-                Style.TextAt(g,"YOUR SPACE  /  SETTINGS",8,Style.Mint,new Rectangle(20,4,440,22),true);
-                Style.TextAt(g,"A little more you.",30,Style.Text,new Rectangle(18,30,Width-40,54),true);
-                Style.TextAt(g,"Set your routine. Keep Nightshift ready for the next rotation.",11,Style.Muted,new Rectangle(20,89,Width-40,26));
-                foreach(var card in new[]{routine,updates,client,about}) Style.Box(g,card,Style.Panel,Style.Line,14);
+                Style.TextAt(g,"App settings",28,Style.Text,new Rectangle(18,7,Width-40,58),true);
+                foreach(var card in new[]{routine,updates}) Style.Box(g,card,Style.Panel,Style.Line,14);
                 Style.TextAt(g,"YOUR ROUTINE",10,Style.Muted,new Rectangle(routine.X+24,routine.Y+19,routine.Width-48,26),true);
-                Row(g,routine,194,"Refresh on launch","Your latest offers, as soon as you open Nightshift.");
-                Row(g,routine,276,"Automatic update checks","Check at startup and every six hours.");
-                Row(g,routine,358,"Automatic installation",checkSwitch.Checked?"Install new versions when the shop is idle.":"Turn on automatic checks to enable this.");
-                using(var pen=new Pen(Style.Line)) { g.DrawLine(pen,routine.X+24,260,routine.Right-24,260); g.DrawLine(pen,routine.X+24,342,routine.Right-24,342); }
+                Row(g,routine,152,"Refresh on launch","Your latest offers, as soon as you open Nightshift.");
+                Row(g,routine,234,"Automatic update checks","Check at startup and every six hours.");
+                Row(g,routine,316,"Automatic installation",checkSwitch.Checked?"Install new versions when the shop is idle.":"Turn on automatic checks to enable this.");
+                using(var pen=new Pen(Style.Line)) { g.DrawLine(pen,routine.X+24,218,routine.Right-24,218); g.DrawLine(pen,routine.X+24,300,routine.Right-24,300); }
                 Style.TextAt(g,"APP UPDATES",10,Style.Muted,new Rectangle(updates.X+24,updates.Y+19,updates.Width-48,26),true);
-                Style.TextAt(g,"Nightshift",23,Style.Text,new Rectangle(updates.X+24,188,updates.Width-48,42),true);
-                Style.Box(g,new RectangleF(updates.X+24,235,114,23),Color.FromArgb(32,43,30),Color.Transparent,11);
-                Style.TextAt(g,"VERSION "+Updates.VersionText,8,Style.Mint,new Rectangle(updates.X+34,235,96,23),true);
-                Style.TextAt(g,"RIOT CLIENT",9,Style.Mint,new Rectangle(client.X+24,client.Y+15,client.Width-48,24),true);
-                Style.TextAt(g,"Quietly connected. Carefully closed.",12,Style.Text,new Rectangle(client.X+24,client.Y+43,client.Width-48,26),true);
-                Style.TextAt(g,"Only a client started by Nightshift is closed afterward.",9,Style.Muted,new Rectangle(client.X+24,client.Y+76,client.Width-48,24));
-                Style.TextAt(g,"ON THIS PC",9,Style.Muted,new Rectangle(about.X+24,about.Y+15,about.Width-48,24),true);
-                Style.TextAt(g,"Preferences save automatically.",11,Style.Text,new Rectangle(about.X+24,about.Y+42,about.Width-48,24));
-                Style.TextAt(g,uninstall.Enabled?"Installed app":"Portable app",8,Style.Muted,new Rectangle(about.X+24,about.Y+74,160,22));
+                Style.TextAt(g,"Nightshift",23,Style.Text,new Rectangle(updates.X+24,146,updates.Width-48,42),true);
+                string version="VERSION "+Updates.VersionText; int versionWidth;
+                using(var font=new Font("Segoe UI",8,FontStyle.Bold)) versionWidth=TextRenderer.MeasureText(g,version,font,new Size(Int32.MaxValue,23),TextFormatFlags.NoPadding|TextFormatFlags.SingleLine).Width;
+                Style.Box(g,new RectangleF(updates.X+24,193,versionWidth+20,23),Color.FromArgb(32,43,30),Color.Transparent,11);
+                Style.TextAt(g,version,8,Style.Mint,new Rectangle(updates.X+34,193,versionWidth,23),true);
             }
             void Row(Graphics g,Rectangle card,int y,string title,string description) {
                 int width=card.Width-128;

@@ -12,7 +12,7 @@ using System.Reflection;
 $assembly | Set-Content (Join-Path $PSScriptRoot 'AssemblyInfo.cs') -Encoding UTF8
 $compiler = Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'
 $sources = @('Shop.cs','ShopUI.cs','ClientLifecycle.cs','LifecycleTests.cs','Preferences.cs','Updates.cs','UpdateTests.cs','SettingsUI.cs','AssemblyInfo.cs') | ForEach-Object { Join-Path $PSScriptRoot $_ }
-& $compiler /nologo /target:winexe /optimize+ "/out:$PSScriptRoot\ValorantShopChecker.exe" "/win32icon:$PSScriptRoot\Nightshift.ico" "/resource:$PSScriptRoot\Nightshift.ico,Nightshift.ico" /reference:System.Windows.Forms.dll /reference:System.Drawing.dll /reference:System.Web.Extensions.dll /reference:System.Management.dll $sources
+& $compiler /nologo /target:winexe /optimize+ "/out:$PSScriptRoot\ValorantShopChecker.exe" "/win32icon:$PSScriptRoot\Nightshift.ico" "/resource:$PSScriptRoot\Nightshift.ico,Nightshift.ico" "/resource:$PSScriptRoot\FeaturedGun.png,FeaturedGun.png" /reference:System.Windows.Forms.dll /reference:System.Drawing.dll /reference:System.Web.Extensions.dll /reference:System.Management.dll $sources
 if ($LASTEXITCODE -ne 0) { throw 'App build failed.' }
 if (-not $InnoCompiler) {
     $command = Get-Command ISCC.exe -ErrorAction SilentlyContinue
