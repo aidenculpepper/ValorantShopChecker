@@ -1,8 +1,7 @@
-Nightshift 1.0.4
+Nightshift 1.0.5
 
-- Simplified the header and sidebar, keeping the version inside Settings.
-- Removed promotional hero copy; featured weapon artwork is larger and shifted left, with public fallback art before connecting.
-- Removed the empty-shop prompt and changed the footer credit to Made by AC.
-- Settings now has a simple App settings heading and two cards.
-- Sized the version badge to its text; moved Check for updates to the bottom with Install update above it.
-- Merged uninstall into the updates card and removed the extra Riot Client and installation cards.
+- Featured weapon area stays empty until your shop supplies artwork; removed fallback gun and crosshair.
+- Moved the Settings icon to the bottom of the sidebar.
+- Removed the updates card and preference heading.
+- Placed Check for updates below preferences, with Install update to its right when available, and Uninstall below.
+- Kept the version and update status inside Settings.

@@ -36,11 +36,10 @@ namespace PersonalShop {
         Preferences preferences=Preferences.Load(); ReleaseInfo available; bool updateBusy, settingsOpen, autoPending; string updateStatus="Not checked yet";
         readonly System.Windows.Forms.Timer updateTimer=new System.Windows.Forms.Timer();
         PaintedPanel content; Label status; string selectedRegion="auto", stamp="PERSONAL STOREFRONT", mode="OFFLINE", clock="-- : -- : --";
-        Image featuredFallback; ShopData data; bool busy, closing, preview; int selectedTab; DateTime lastRequest=DateTime.MinValue; CancellationTokenSource activeRefresh;
+        ShopData data; bool busy, closing, preview; int selectedTab; DateTime lastRequest=DateTime.MinValue; CancellationTokenSource activeRefresh;
         readonly System.Windows.Forms.Timer tick=new System.Windows.Forms.Timer();
         int pulse; readonly ToolTip tips=new ToolTip();
         public ShopWindow(bool capture) {
-            using(var asset=System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream("FeaturedGun.png")) if(asset!=null) using(var image=Image.FromStream(asset)) featuredFallback=new Bitmap(image);
             preview=capture; Text="Nightshift · Valorant Shop Checker "+Updates.VersionText; Font=new Font("Segoe UI",10); ForeColor=Style.Text; BackColor=Style.Bg; FormBorderStyle=FormBorderStyle.None;
             using(var icon=System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream("Nightshift.ico")) if(icon!=null) Icon=new Icon(icon);
             ClientSize=new Size(1240,850); MinimumSize=new Size(1050,760); StartPosition=FormStartPosition.CenterScreen; AutoScaleMode=AutoScaleMode.Dpi; DoubleBuffered=true;
@@ -66,7 +65,7 @@ namespace PersonalShop {
             tick.Interval=50; tick.Tick+=async delegate { pulse=(pulse+1)%120; if(busy) Invalidate(new Rectangle(84,45,Width-84,270)); if(pulse%20==0) { UpdateClock(); RefreshSettingsState(); if(autoPending && !preview && !busy && !updateBusy && !settingsOpen && !closing) { autoPending=false; if(preferences.AutomaticUpdates && preferences.AutomaticInstall) await InstallUpdate(true); } } }; tick.Start();
             FormClosing+=delegate(object sender,FormClosingEventArgs e) { if(busy) { e.Cancel=true; closing=true; activeRefresh.Cancel(); status.Text="Finishing cleanup before closing..."; } };
             updateTimer.Interval=21600000; updateTimer.Tick+=async delegate { if(preferences.AutomaticUpdates) await CheckUpdate(); }; if(!capture) updateTimer.Start();
-            FormClosed+=delegate { tick.Dispose(); updateTimer.Dispose(); tips.Dispose(); menu.Dispose(); DisposeData(data); if(featuredFallback!=null) featuredFallback.Dispose(); };
+            FormClosed+=delegate { tick.Dispose(); updateTimer.Dispose(); tips.Dispose(); menu.Dispose(); DisposeData(data); };
             Shown+=async delegate { if(preview) ShowDemo(); else { if(preferences.RefreshOnLaunch) await RefreshShop(); if(preferences.AutomaticUpdates) await CheckUpdate(); } };
             Arrange();
         }
@@ -86,7 +85,7 @@ namespace PersonalShop {
         void Arrange() {
             if(content==null) return;
             closeButton.Location=new Point(Width-47,13); maxButton.Location=new Point(Width-87,13); minButton.Location=new Point(Width-127,13);
-            settings.Location=new Point(20,Height-143);
+            settings.Location=new Point(20,Height-72);
             shopNavigation.Location=new Point(20,104);
             if(settingsPage!=null) settingsPage.Bounds=new Rectangle(96,79,Width-112,Height-145);
             refresh.Location=new Point(Width-198,332); regions.Location=new Point(Width-362,332); demo.Location=new Point(Width-464,332);
@@ -114,11 +113,9 @@ namespace PersonalShop {
                 for(int x=hx+hw/2;x<hx+hw;x+=36) g.DrawLine(pen,x,hy,x,hy+hh);
             }
             using(var b=new SolidBrush(Color.FromArgb(12,Style.Mint))) g.FillPolygon(b,new Point[]{new Point(Width-660,hy+hh),new Point(Width-440,hy),new Point(Width-260,hy),new Point(Width-480,hy+hh)});
-            var featured=data!=null && data.Daily.Count>0 && data.Daily[0].Art!=null?data.Daily[0].Art:featuredFallback;
+            var featured=data!=null && data.Daily.Count>0 && data.Daily[0].Art!=null?data.Daily[0].Art:null;
             if(featured!=null) {
                 var art=featured; float scale=Math.Min((Width<1150?450f:580f)/art.Width,170f/art.Height); int w=(int)(art.Width*scale),h=(int)(art.Height*scale); g.DrawImage(art,cx-w/2,cy-h/2+18,w,h);
-            } else {
-                using(var pen=new Pen(Color.FromArgb(92,Style.Mint),2)) { g.DrawEllipse(pen,cx-37,cy-37,74,74); g.DrawLine(pen,cx-52,cy,cx+52,cy); g.DrawLine(pen,cx,cy-52,cx,cy+52); }
             }
             g.Restore(saved);
             int bx=Width-250;

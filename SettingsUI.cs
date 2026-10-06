@@ -53,19 +53,19 @@ namespace PersonalShop {
         class SettingsPage : PaintedPanel {
             readonly ShopWindow owner; readonly Switch refreshSwitch,checkSwitch,installSwitch;
             readonly VaultButton check,install,uninstall; readonly Label message;
-            Rectangle routine,updates;
+            Rectangle routine;
             public SettingsPage(ShopWindow window) {
                 owner=window;
                 refreshSwitch=Toggle("Refresh shop on launch",owner.preferences.RefreshOnLaunch,value=>owner.preferences.RefreshOnLaunch=value);
                 checkSwitch=Toggle("Check for updates automatically",owner.preferences.AutomaticUpdates,value=> { owner.preferences.AutomaticUpdates=value; installSwitch.Enabled=value; });
                 installSwitch=Toggle("Install updates automatically",owner.preferences.AutomaticInstall,value=>owner.preferences.AutomaticInstall=value);
                 installSwitch.Enabled=checkSwitch.Checked;
-                check=new VaultButton {Text="Check for updates",Accent=true,BackColor=Style.Panel}; Controls.Add(check); check.Click+=async delegate { await owner.CheckUpdate(); };
-                install=new VaultButton {Text="Install update",BackColor=Style.Panel}; Controls.Add(install); install.Click+=async delegate { await owner.InstallUpdate(false); };
-                uninstall=new VaultButton {Text="Uninstall app",BackColor=Style.Panel}; Controls.Add(uninstall);
+                check=new VaultButton {Text="Check for updates",Accent=true,BackColor=Style.Bg}; Controls.Add(check); check.Click+=async delegate { await owner.CheckUpdate(); };
+                install=new VaultButton {Text="Install update",BackColor=Style.Bg}; Controls.Add(install); install.Click+=async delegate { await owner.InstallUpdate(false); };
+                uninstall=new VaultButton {Text="Uninstall app",BackColor=Style.Bg}; Controls.Add(uninstall);
                 string path=Path.Combine(Application.StartupPath,"unins000.exe"); uninstall.Enabled=File.Exists(path);
                 uninstall.Click+=delegate { if(owner.busy || owner.updateBusy) return; try { Process.Start(new ProcessStartInfo(path) {UseShellExecute=true}); owner.Close(); } catch { owner.updateStatus="Couldn't open the uninstaller."; RefreshState(); } };
-                message=new Label {BackColor=Style.Panel,ForeColor=Style.Muted,Font=new Font("Segoe UI",10),AutoEllipsis=true}; Controls.Add(message);
+                message=new Label {BackColor=Style.Bg,ForeColor=Style.Muted,Font=new Font("Segoe UI",10),AutoEllipsis=true}; Controls.Add(message);
                 Resize+=delegate { LayoutPage(); }; LayoutPage(); RefreshState();
             }
             Switch Toggle(string name,bool value,Action<bool> apply) {
@@ -73,13 +73,12 @@ namespace PersonalShop {
                 control.CheckedChanged+=delegate { apply(control.Checked); owner.SavePreferences(); Invalidate(); }; Controls.Add(control); return control;
             }
             void LayoutPage() {
-                int usable=Width-40,gap=20,left=(usable-gap)*57/100,right=usable-gap-left;
-                routine=new Rectangle(20,90,left,410); updates=new Rectangle(20+left+gap,90,right,410);
-                refreshSwitch.Bounds=new Rectangle(routine.Right-84,156,58,30); checkSwitch.Bounds=new Rectangle(routine.Right-84,238,58,30); installSwitch.Bounds=new Rectangle(routine.Right-84,320,58,30);
-                message.Bounds=new Rectangle(updates.X+24,224,updates.Width-48,54);
-                check.Bounds=new Rectangle(updates.X+24,updates.Bottom-64,updates.Width-48,40);
-                install.Bounds=new Rectangle(updates.X+24,updates.Bottom-114,updates.Width-48,40);
-                uninstall.Bounds=new Rectangle(updates.X+24,updates.Y+214,130,32); Invalidate();
+                routine=new Rectangle(20,90,Math.Min(760,Width-40),270);
+                refreshSwitch.Bounds=new Rectangle(routine.Right-84,118,58,30); checkSwitch.Bounds=new Rectangle(routine.Right-84,200,58,30); installSwitch.Bounds=new Rectangle(routine.Right-84,282,58,30);
+                check.Bounds=new Rectangle(20,384,220,40);
+                install.Bounds=new Rectangle(256,384,220,40);
+                uninstall.Bounds=new Rectangle(20,440,220,36);
+                message.Bounds=new Rectangle(256,440,routine.Width-236,40); Invalidate();
             }
             public void RefreshState() {
                 message.Text=owner.updateStatus; message.ForeColor=owner.available!=null?Style.Orange:owner.updateStatus=="You're up to date"?Style.Mint:Style.Muted;
@@ -97,18 +96,15 @@ namespace PersonalShop {
             protected override void OnPaint(PaintEventArgs e) {
                 base.OnPaint(e); var g=e.Graphics; g.SmoothingMode=SmoothingMode.AntiAlias;
                 Style.TextAt(g,"App settings",28,Style.Text,new Rectangle(18,7,Width-40,58),true);
-                foreach(var card in new[]{routine,updates}) Style.Box(g,card,Style.Panel,Style.Line,14);
-                Style.TextAt(g,"YOUR ROUTINE",10,Style.Muted,new Rectangle(routine.X+24,routine.Y+19,routine.Width-48,26),true);
-                Row(g,routine,152,"Refresh on launch","Your latest offers, as soon as you open Nightshift.");
-                Row(g,routine,234,"Automatic update checks","Check at startup and every six hours.");
-                Row(g,routine,316,"Automatic installation",checkSwitch.Checked?"Install new versions when the shop is idle.":"Turn on automatic checks to enable this.");
-                using(var pen=new Pen(Style.Line)) { g.DrawLine(pen,routine.X+24,218,routine.Right-24,218); g.DrawLine(pen,routine.X+24,300,routine.Right-24,300); }
-                Style.TextAt(g,"APP UPDATES",10,Style.Muted,new Rectangle(updates.X+24,updates.Y+19,updates.Width-48,26),true);
-                Style.TextAt(g,"Nightshift",23,Style.Text,new Rectangle(updates.X+24,146,updates.Width-48,42),true);
+                Style.Box(g,routine,Style.Panel,Style.Line,14);
+                Row(g,routine,114,"Refresh on launch","Your latest offers, as soon as you open Nightshift.");
+                Row(g,routine,196,"Automatic update checks","Check at startup and every six hours.");
+                Row(g,routine,278,"Automatic installation",checkSwitch.Checked?"Install new versions when the shop is idle.":"Turn on automatic checks to enable this.");
+                using(var pen=new Pen(Style.Line)) { g.DrawLine(pen,routine.X+24,180,routine.Right-24,180); g.DrawLine(pen,routine.X+24,262,routine.Right-24,262); }
                 string version="VERSION "+Updates.VersionText; int versionWidth;
                 using(var font=new Font("Segoe UI",8,FontStyle.Bold)) versionWidth=TextRenderer.MeasureText(g,version,font,new Size(Int32.MaxValue,23),TextFormatFlags.NoPadding|TextFormatFlags.SingleLine).Width;
-                Style.Box(g,new RectangleF(updates.X+24,193,versionWidth+20,23),Color.FromArgb(32,43,30),Color.Transparent,11);
-                Style.TextAt(g,version,8,Style.Mint,new Rectangle(updates.X+34,193,versionWidth,23),true);
+                Style.Box(g,new RectangleF(20,500,versionWidth+20,23),Color.FromArgb(32,43,30),Color.Transparent,11);
+                Style.TextAt(g,version,8,Style.Mint,new Rectangle(30,500,versionWidth,23),true);
             }
             void Row(Graphics g,Rectangle card,int y,string title,string description) {
                 int width=card.Width-128;
