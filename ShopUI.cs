@@ -14,7 +14,7 @@ namespace PersonalShop {
         public static void TextAt(Graphics g,string text,float size,Color color,Rectangle r,bool bold=false,TextFormatFlags flags=TextFormatFlags.Left|TextFormatFlags.VerticalCenter|TextFormatFlags.EndEllipsis) { using(var f=new Font("Segoe UI",size,bold?FontStyle.Bold:FontStyle.Regular)) TextRenderer.DrawText(g,text,f,r,color,flags|TextFormatFlags.NoPadding); }
     }
     class VaultButton : Button {
-        bool hover; public bool Accent, Selected; public string Small="";
+        bool hover; public bool Accent, Selected, MutedDanger; public string Small="";
         public VaultButton() { SetStyle(ControlStyles.UserPaint|ControlStyles.AllPaintingInWmPaint|ControlStyles.OptimizedDoubleBuffer|ControlStyles.ResizeRedraw,true); UseVisualStyleBackColor=false; FlatStyle=FlatStyle.Flat; FlatAppearance.BorderSize=0; BackColor=Style.Bg; ForeColor=Style.Text; Font=new Font("Segoe UI",10,FontStyle.Bold); Cursor=Cursors.Hand; DoubleBuffered=true; }
         protected override void OnPaintBackground(PaintEventArgs e) { e.Graphics.Clear(BackColor); }
         protected override void OnMouseEnter(EventArgs e) { hover=true; Invalidate(); base.OnMouseEnter(e); }
@@ -22,8 +22,9 @@ namespace PersonalShop {
         protected override void OnPaint(PaintEventArgs e) {
             var g=e.Graphics; g.Clear(BackColor); g.SmoothingMode=SmoothingMode.AntiAlias;
             Color bg=Accent?(hover?Color.FromArgb(211,255,178):Style.Mint):(Selected?Color.FromArgb(37,47,35):(hover?Color.FromArgb(34,40,46):Style.Panel));
-            Style.Box(g,new RectangleF(0,0,Width-1,Height-1),bg,Accent?Color.Transparent:(Selected?Color.FromArgb(77,108,60):Style.Line),8);
-            Style.TextAt(g,Text,10,Enabled?(Accent?Style.Bg:(Selected?Style.Mint:Style.Text)):Style.Muted,new Rectangle(8,0,Width-16,Height),true,TextFormatFlags.HorizontalCenter|TextFormatFlags.VerticalCenter|TextFormatFlags.EndEllipsis);
+            if(MutedDanger) bg=hover && Enabled?Color.FromArgb(43,27,31):Color.FromArgb(30,22,26);
+            Style.Box(g,new RectangleF(0,0,Width-1,Height-1),bg,MutedDanger?Color.FromArgb(66,43,49):Accent?Color.Transparent:(Selected?Color.FromArgb(77,108,60):Style.Line),8);
+            Style.TextAt(g,Text,10,MutedDanger?(Enabled?Color.FromArgb(187,126,132):Color.FromArgb(125,88,95)):Enabled?(Accent?Style.Bg:(Selected?Style.Mint:Style.Text)):Style.Muted,new Rectangle(8,0,Width-16,Height),true,TextFormatFlags.HorizontalCenter|TextFormatFlags.VerticalCenter|TextFormatFlags.EndEllipsis);
         }
     }
     class PaintedPanel : Panel {

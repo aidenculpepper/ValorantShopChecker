@@ -62,10 +62,10 @@ namespace PersonalShop {
                 installSwitch.Enabled=checkSwitch.Checked;
                 check=new VaultButton {Text="Check for updates",Accent=true,BackColor=Style.Bg}; Controls.Add(check); check.Click+=async delegate { await owner.CheckUpdate(); };
                 install=new VaultButton {Text="Install update",BackColor=Style.Bg}; Controls.Add(install); install.Click+=async delegate { await owner.InstallUpdate(false); };
-                uninstall=new VaultButton {Text="Uninstall app",BackColor=Style.Bg}; Controls.Add(uninstall);
+                uninstall=new VaultButton {Text="Uninstall app",BackColor=Style.Bg,MutedDanger=true}; Controls.Add(uninstall);
                 string path=Path.Combine(Application.StartupPath,"unins000.exe"); uninstall.Enabled=File.Exists(path);
                 uninstall.Click+=delegate { if(owner.busy || owner.updateBusy) return; try { Process.Start(new ProcessStartInfo(path) {UseShellExecute=true}); owner.Close(); } catch { owner.updateStatus="Couldn't open the uninstaller."; RefreshState(); } };
-                message=new Label {BackColor=Style.Bg,ForeColor=Style.Muted,Font=new Font("Segoe UI",10),AutoEllipsis=true}; Controls.Add(message);
+                message=new Label {BackColor=Style.Bg,ForeColor=Style.Muted,Font=new Font("Segoe UI",9),AutoEllipsis=true,TextAlign=ContentAlignment.MiddleLeft}; Controls.Add(message);
                 Resize+=delegate { LayoutPage(); }; LayoutPage(); RefreshState();
             }
             Switch Toggle(string name,bool value,Action<bool> apply) {
@@ -78,7 +78,8 @@ namespace PersonalShop {
                 check.Bounds=new Rectangle(20,384,220,40);
                 install.Bounds=new Rectangle(256,384,220,40);
                 uninstall.Bounds=new Rectangle(20,440,220,36);
-                message.Bounds=new Rectangle(256,440,routine.Width-236,40); Invalidate();
+                int badgeWidth; using(var versionFont=new Font("Segoe UI",8,FontStyle.Bold)) badgeWidth=TextRenderer.MeasureText("VERSION "+Updates.VersionText,versionFont,new Size(Int32.MaxValue,23),TextFormatFlags.NoPadding|TextFormatFlags.SingleLine).Width+20;
+                message.Bounds=new Rectangle(20+badgeWidth+14,500,routine.Width-badgeWidth-14,23); Invalidate();
             }
             public void RefreshState() {
                 message.Text=owner.updateStatus; message.ForeColor=owner.available!=null?Style.Orange:owner.updateStatus=="You're up to date"?Style.Mint:Style.Muted;
