@@ -60,9 +60,9 @@ namespace PersonalShop {
                 checkSwitch=Toggle("Check for updates automatically",owner.preferences.AutomaticUpdates,value=> { owner.preferences.AutomaticUpdates=value; installSwitch.Enabled=value; });
                 installSwitch=Toggle("Install updates automatically",owner.preferences.AutomaticInstall,value=>owner.preferences.AutomaticInstall=value);
                 installSwitch.Enabled=checkSwitch.Checked;
-                check=new VaultButton {Text="Check for updates",Accent=true}; Controls.Add(check); check.Click+=async delegate { await owner.CheckUpdate(); };
-                install=new VaultButton {Text="Install update"}; Controls.Add(install); install.Click+=async delegate { await owner.InstallUpdate(false); };
-                uninstall=new VaultButton {Text="Uninstall app"}; Controls.Add(uninstall);
+                check=new VaultButton {Text="Check for updates",Accent=true,BackColor=Style.Panel}; Controls.Add(check); check.Click+=async delegate { await owner.CheckUpdate(); };
+                install=new VaultButton {Text="Install update",BackColor=Style.Panel}; Controls.Add(install); install.Click+=async delegate { await owner.InstallUpdate(false); };
+                uninstall=new VaultButton {Text="Uninstall app",BackColor=Style.Panel}; Controls.Add(uninstall);
                 string path=Path.Combine(Application.StartupPath,"unins000.exe"); uninstall.Enabled=File.Exists(path);
                 uninstall.Click+=delegate { if(owner.busy || owner.updateBusy) return; try { Process.Start(new ProcessStartInfo(path) {UseShellExecute=true}); owner.Close(); } catch { owner.updateStatus="Couldn't open the uninstaller."; RefreshState(); } };
                 message=new Label {BackColor=Style.Panel,ForeColor=Style.Muted,Font=new Font("Segoe UI",10),AutoEllipsis=true}; Controls.Add(message);
@@ -135,13 +135,14 @@ namespace PersonalShop {
         }
     }
     class Switch : CheckBox {
-        public Switch() { Appearance=Appearance.Button; FlatStyle=FlatStyle.Flat; FlatAppearance.BorderSize=0; Cursor=Cursors.Hand; DoubleBuffered=true; BackColor=Style.Panel; }
+        public Switch() { SetStyle(ControlStyles.UserPaint|ControlStyles.AllPaintingInWmPaint|ControlStyles.OptimizedDoubleBuffer|ControlStyles.ResizeRedraw,true); UseVisualStyleBackColor=false; Appearance=Appearance.Button; FlatStyle=FlatStyle.Flat; FlatAppearance.BorderSize=0; Cursor=Cursors.Hand; DoubleBuffered=true; BackColor=Style.Panel; }
+        protected override void OnPaintBackground(PaintEventArgs e) { e.Graphics.Clear(BackColor); }
         protected override void OnCheckedChanged(EventArgs e) { base.OnCheckedChanged(e); Invalidate(); }
         protected override void OnEnabledChanged(EventArgs e) { base.OnEnabledChanged(e); Invalidate(); }
         protected override void OnGotFocus(EventArgs e) { base.OnGotFocus(e); Invalidate(); }
         protected override void OnLostFocus(EventArgs e) { base.OnLostFocus(e); Invalidate(); }
         protected override void OnPaint(PaintEventArgs e) {
-            var g=e.Graphics; g.SmoothingMode=SmoothingMode.AntiAlias;
+            var g=e.Graphics; g.Clear(BackColor); g.SmoothingMode=SmoothingMode.AntiAlias;
             Color fill=!Enabled?Color.FromArgb(37,42,46):Checked?Style.Mint:Color.FromArgb(52,61,66);
             Style.Box(g,new RectangleF(1,2,Width-2,Height-4),fill,Focused?Style.Text:Color.Transparent,(Height-4)/2);
             using(var b=new SolidBrush(!Enabled?Style.Muted:Checked?Style.Bg:Style.Text)) g.FillEllipse(b,Checked?Width-Height+5:5,6,Height-12,Height-12);
