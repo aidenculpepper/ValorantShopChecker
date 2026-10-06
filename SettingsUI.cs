@@ -10,7 +10,7 @@ namespace PersonalShop {
     partial class ShopWindow {
         void SavePreferences() { try { preferences.Save(); } catch { MessageBox.Show(this,"Windows couldn't save your settings. Your choices will apply for this session.","Settings",MessageBoxButtons.OK,MessageBoxIcon.Warning); } }
         async Task CheckUpdate() {
-            if(updateBusy || closing) return; updateBusy=true; available=null; updateStatus="Checking for updates...";
+            if(updateBusy || closing) return; updateBusy=true; available=null; updateStatus="Checking GitHub..."; RefreshSettingsState();
             try { available=await Task.Run(()=>Updates.Fetch()); updateStatus=available==null?"You're up to date":"Version "+available.Version.ToString(3)+" is available"; }
             catch(Exception ex) { updateStatus=ex is FriendlyException?ex.Message:"Couldn't check for updates. Try again later."; }
             finally { updateBusy=false; }

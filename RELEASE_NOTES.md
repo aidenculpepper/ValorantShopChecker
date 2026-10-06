@@ -1,4 +1,4 @@
-Nightshift 1.0.6
+Nightshift 1.0.7
 
-- Moved update status beside the version badge.
-- Styled Uninstall with muted red text, border, and background.
+- Check for updates immediately shows Checking GitHub... beside the version while the request runs.
+- The check button is disabled immediately until GitHub responds, then the result replaces the loading status.
