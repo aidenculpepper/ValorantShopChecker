@@ -60,7 +60,7 @@ namespace PersonalShop {
         public static string InstallerArguments { get { return "/SHOPUPDATE=1 /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-"; } }
         public static void Launch(string path) { Process.Start(new ProcessStartInfo(path,InstallerArguments) {UseShellExecute=true}); }
         public static int Bootstrap(bool silent) {
-            try { var release=Fetch(); if(release==null) return 0; Launch(Download(release)); return 2; }
+            try { var release=Fetch(); if(release==null) return 0; string file=Download(release); Process.Start(new ProcessStartInfo(file,silent?InstallerArguments:"/SHOPUPDATE=1 /SHOPBOOTSTRAP=1") {UseShellExecute=true}); return 2; }
             catch { return 1; }
         }
     }

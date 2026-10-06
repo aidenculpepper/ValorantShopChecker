@@ -51,6 +51,7 @@ namespace PersonalShop {
                 }
             }
             settingsOpen=false;
+            autoPending=available!=null && preferences.AutomaticUpdates && preferences.AutomaticInstall;
         }
         CheckBox AddToggle(Form dialog,string text,int y,bool value,Action<bool> apply) {
             var toggle=new CheckBox {Text=text,Checked=value,ForeColor=Style.Text,BackColor=Style.Panel,Bounds=new Rectangle(26,y,488,36),Padding=new Padding(12,0,0,0)};

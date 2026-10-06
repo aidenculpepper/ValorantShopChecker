@@ -42,13 +42,13 @@ Filename: "{app}\ValorantShopChecker.exe"; Flags: nowait runasoriginaluser; Chec
 [Code]
 function IsUpdate(): Boolean;
 begin
-  Result := ExpandConstant('{param:SHOPUPDATE|0}') = '1';
+  Result := (ExpandConstant('{param:SHOPUPDATE|0}') = '1') and (ExpandConstant('{param:SHOPBOOTSTRAP|0}') <> '1');
 end;
 function InitializeSetup(): Boolean;
 var Code: Integer; Arguments: String;
 begin
   Result := True;
-  if IsUpdate() then exit;
+  if ExpandConstant('{param:SHOPUPDATE|0}') = '1' then exit;
   ExtractTemporaryFile('ValorantShopChecker.exe');
   Arguments := '--install-latest';
   if WizardSilent() then Arguments := Arguments + ' --silent-update';
