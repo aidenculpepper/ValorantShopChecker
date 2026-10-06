@@ -50,7 +50,8 @@ namespace PersonalShop {
             regions.Click+=delegate { menu.Show(regions,new Point(0,regions.Height)); };
             refresh=Button("↻  Refresh shop",true); refresh.Width=166; refresh.Click+=async delegate { await RefreshShop(); };
             demo=Button("Preview",false); demo.Width=88; demo.Click+=delegate { ShowDemo(); };
-            settings=Button("⚙",false); settings.Size=new Size(44,44); tips.SetToolTip(settings,"Settings and updates"); settings.Click+=delegate { OpenSettings(); };
+            settings=new NavigationButton {Gear=true,Size=new Size(44,44),AccessibleName="Settings"}; Controls.Add(settings); tips.SetToolTip(settings,"Settings and updates"); settings.Click+=delegate { OpenSettings(); };
+            shopNavigation=new NavigationButton {Size=new Size(44,46),Selected=true,AccessibleName="Shop"}; Controls.Add(shopNavigation); tips.SetToolTip(shopNavigation,"Back to your shop"); shopNavigation.Click+=delegate { CloseSettings(); };
             dailyTab=Button("Daily offers",false); dailyTab.Width=145; dailyTab.Selected=true; dailyTab.Click+=delegate { SwitchTab(0); };
             nightTab=Button("Night Market",false); nightTab.Width=145; nightTab.Click+=delegate { SwitchTab(1); };
             closeButton=Button("×",false); closeButton.Size=new Size(34,26); closeButton.Click+=delegate { Close(); };
@@ -60,7 +61,7 @@ namespace PersonalShop {
             content=new PaintedPanel { AutoScroll=true }; Controls.Add(content);
             status=new Label { BackColor=Style.Bg,ForeColor=Style.Muted,Font=new Font("Segoe UI",9),AutoEllipsis=true,Text="Ready. Enable Stay signed in in Riot Client, then refresh." }; Controls.Add(status);
             Resize+=delegate { Arrange(); }; MouseDown+=Drag;
-            tick.Interval=50; tick.Tick+=async delegate { pulse=(pulse+1)%120; if(busy) Invalidate(new Rectangle(84,45,Width-84,270)); if(pulse%20==0) { UpdateClock(); if(autoPending && !preview && !busy && !updateBusy && !settingsOpen && !closing) { autoPending=false; if(preferences.AutomaticUpdates && preferences.AutomaticInstall) await InstallUpdate(true); } } }; tick.Start();
+            tick.Interval=50; tick.Tick+=async delegate { pulse=(pulse+1)%120; if(busy) Invalidate(new Rectangle(84,45,Width-84,270)); if(pulse%20==0) { UpdateClock(); RefreshSettingsState(); if(autoPending && !preview && !busy && !updateBusy && !settingsOpen && !closing) { autoPending=false; if(preferences.AutomaticUpdates && preferences.AutomaticInstall) await InstallUpdate(true); } } }; tick.Start();
             FormClosing+=delegate(object sender,FormClosingEventArgs e) { if(busy) { e.Cancel=true; closing=true; activeRefresh.Cancel(); status.Text="Finishing cleanup before closing..."; } };
             updateTimer.Interval=21600000; updateTimer.Tick+=async delegate { if(preferences.AutomaticUpdates) await CheckUpdate(); }; if(!capture) updateTimer.Start();
             FormClosed+=delegate { tick.Dispose(); updateTimer.Dispose(); tips.Dispose(); menu.Dispose(); DisposeData(data); };
@@ -84,6 +85,8 @@ namespace PersonalShop {
             if(content==null) return;
             closeButton.Location=new Point(Width-47,13); maxButton.Location=new Point(Width-87,13); minButton.Location=new Point(Width-127,13);
             settings.Location=new Point(20,Height-143);
+            shopNavigation.Location=new Point(20,104);
+            if(settingsPage!=null) settingsPage.Bounds=new Rectangle(96,79,Width-112,Height-145);
             refresh.Location=new Point(Width-198,332); regions.Location=new Point(Width-362,332); demo.Location=new Point(Width-464,332);
             dailyTab.Location=new Point(116,332); nightTab.Location=new Point(271,332);
             content.Bounds=new Rectangle(108,425,Width-128,Height-491);
@@ -99,8 +102,10 @@ namespace PersonalShop {
             Style.TextAt(g,"VALORANT SHOP  /  v"+Updates.VersionText,8,Style.Muted,new Rectangle(288,16,240,23));
             Style.Box(g,new RectangleF(20,104,44,46),Color.FromArgb(32,43,30),Color.FromArgb(61,81,46),10);
             using(var pen=new Pen(Style.Mint,2)) { g.DrawRectangle(pen,31,116,22,20); g.DrawLine(pen,31,122,53,122); g.DrawLine(pen,38,116,38,136); }
-            Style.TextAt(g,"SHOP",7,Style.Mint,new Rectangle(16,158,52,20),true,TextFormatFlags.HorizontalCenter|TextFormatFlags.VerticalCenter);
+            Style.TextAt(g,"SHOP",7,settingsOpen?Style.Muted:Style.Mint,new Rectangle(16,158,52,20),true,TextFormatFlags.HorizontalCenter|TextFormatFlags.VerticalCenter);
             Style.TextAt(g,"V",20,Color.FromArgb(64,74,78),new Rectangle(24,Height-78,35,30),true,TextFormatFlags.HorizontalCenter|TextFormatFlags.VerticalCenter);
+            Style.TextAt(g,"SETTINGS",6,settingsOpen?Style.Mint:Style.Muted,new Rectangle(9,Height-98,66,20),true,TextFormatFlags.HorizontalCenter|TextFormatFlags.VerticalCenter);
+            if(settingsOpen) return;
             int hx=116,hy=79,hw=Width-148,hh=231;
             using(var p=Style.Round(new RectangleF(hx,hy,hw,hh),16)) using(var b=new LinearGradientBrush(new Rectangle(hx,hy,hw,hh),Color.FromArgb(31,43,34),Color.FromArgb(23,28,30),15f)) g.FillPath(b,p);
             var saved=g.Save(); using(var clip=Style.Round(new RectangleF(hx,hy,hw,hh),16)) g.SetClip(clip);
@@ -137,7 +142,7 @@ namespace PersonalShop {
         static void DisposeData(ShopData d) { if(d==null) return; foreach(var o in d.Daily) if(o.Art!=null) o.Art.Dispose(); foreach(var o in d.Night) if(o.Art!=null) o.Art.Dispose(); }
         void ClearContent() { while(content.Controls.Count>0) content.Controls[0].Dispose(); }
         void LayoutCards() {
-            if(content==null) return; content.SuspendLayout(); ClearContent();
+            if(content==null || settingsOpen) return; content.SuspendLayout(); ClearContent();
             var offers=data==null?null:(selectedTab==0?data.Daily:data.Night);
             int count=offers==null?4:offers.Count;
             if(count==0) {

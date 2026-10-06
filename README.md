@@ -10,11 +10,11 @@ Open the app and click **Refresh shop**. Enable Stay signed in in Riot Client fi
 
 ## Settings and updates
 
-Click the settings button at the lower left. Region choice is saved when changed in the shop. Settings are stored at `%LOCALAPPDATA%\ValorantShopChecker\settings.json`.
+Click the settings button at the lower left to open the built-in Settings page. Use the Shop button in the sidebar to return to your offers. Region choice is saved when changed in the shop. Settings are stored at `%LOCALAPPDATA%\ValorantShopChecker\settings.json`.
 
 - Refresh shop on launch: off by default.
 - Check for updates automatically: on by default, at startup and every six hours while open.
-- Install updates automatically: off by default. Requires automatic checks; waits for shop refresh and the settings dialog to finish.
+- Install updates automatically: off by default. Requires automatic checks; waits for shop refresh and the Settings page to close.
 - Check for updates: checks the latest stable GitHub release. An Install update button appears for newer versions.
 - Manual and automatic updates both use a silent installer, restart the app, and retain settings and shortcuts.
 - Installed copies can open their uninstaller from Settings. Portable copies show Uninstall disabled.
