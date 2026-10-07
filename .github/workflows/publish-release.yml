@@ -55,3 +55,4 @@ jobs:
           fi
           gh release create "$RELEASE_TAG" ValorantShopCheckerSetup.exe --target "$GITHUB_SHA" --title "Valorant Shop Checker $RELEASE_TAG" --notes-file RELEASE_NOTES.md --draft
           gh release edit "$RELEASE_TAG" --draft=false --latest
+

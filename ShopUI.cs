@@ -98,8 +98,7 @@ namespace PersonalShop {
         protected override void OnPaint(PaintEventArgs e) {
             base.OnPaint(e); var g=e.Graphics; g.SmoothingMode=SmoothingMode.AntiAlias;
             using(var p=new Pen(Style.Line)) { g.DrawRectangle(p,0,0,Width-1,Height-1); g.DrawLine(p,84,0,84,Height); g.DrawLine(p,84,56,Width,56); g.DrawLine(p,108,Height-54,Width-20,Height-54); }
-            Style.Box(g,new RectangleF(19,17,46,43),Style.Mint,Color.Transparent,12);
-            using(var b=new SolidBrush(Style.Bg)) g.FillPolygon(b,new Point[]{new Point(28,29),new Point(35,29),new Point(43,43),new Point(51,29),new Point(57,29),new Point(45,50),new Point(40,50)});
+            Brand.Draw(g,new RectangleF(19,14,46,46));
             Style.TextAt(g,"NIGHTSHIFT",11,Style.Text,new Rectangle(116,14,180,27),true);
             Style.Box(g,new RectangleF(20,104,44,46),Color.FromArgb(32,43,30),Color.FromArgb(61,81,46),10);
             using(var pen=new Pen(Style.Mint,2)) { g.DrawRectangle(pen,31,116,22,20); g.DrawLine(pen,31,122,53,122); g.DrawLine(pen,38,116,38,136); }
